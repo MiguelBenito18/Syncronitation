@@ -7,19 +7,21 @@
 
 void frecuencias(double *w);
 void fase_inicial(double *theta);
-void matriz_A_ER( int **A);
-void matriz_A_BA( int **A);
+void matriz_A_ER( int A[N][N]);
+void matriz_A_BA( int A[N][N]);
 
-void kuramoto(int **A, double *theta, double *dtheta, double *w, double lambda);
-void runge_kutta(int **A, double *theta, double *w, double lambda, double dt);
+void kuramoto(int A[N][N], double *theta, double *dtheta, double *w, double lambda);
+void runge_kutta(int A[N][N], double *theta, double *w, double lambda, double dt);
 double modulo_r(double *theta);
 void printear_file(char *lugar, double variable_x, double *variable_y);
 
 //FALTA EL KUTTA
 int main()
 {
+    char lugar="results/r.txt";
     double w[N], theta[N], dtheta[N];
     double r;
+    double ri[N]
     int A[N][N];
     double t_final, t_inicial, delta_t;
     double lamda_final, lamda_inicial, delta_lamda;
@@ -31,17 +33,18 @@ int main()
     //¿QUÉ THETAS INICIALES COGEMOS?
     for(i = 0;i<delta_lamda;i++){
         for(j = 0;j<delta_t; j++){
-            runge_kutta(theta, w, lamda, t_inicial + delta_t*j);
+            runge_kutta(theta, w, lamda_inicial+delta_lamda*i, t_inicial + delta_t*j);
             r = modulo_r(theta);
-            kuramoto(A, theta, dtheta, w, lamda);
+            kuramoto(A, theta, dtheta, w, lamda_inicial+delta_lamda*i);
 
         }
         // ANTES TENEMOS QUE VER CUANDO TERMALIZA  printear_file("results/r.txt", lamda_inicial+delta_lamda*i, r[i]);
-        
-        
+        ri[i]=r;
+        printear_file(lugar,lamda_inicial+delta_lamda*i,ri[i])
 
     }
     //hay que correr en lamda y luego en t;
+    
 }
 
 void frecuencias(double *w){
@@ -59,7 +62,7 @@ void fase_inicial(double *theta){
     }
 }
 
-void matriz_A_ER( int **A){
+void matriz_A_ER( int A[N][N]){
     int i, j;
     double p, random_aux;
     p = 6/199;
@@ -76,7 +79,7 @@ void matriz_A_ER( int **A){
     }
 }
 
-void matriz_A_BA( int **A){
+void matriz_A_BA( int A[N][N]){
     int i, j;
     double p, random_aux;
     int nodo_random;
@@ -109,7 +112,7 @@ void matriz_A_BA( int **A){
     
 }
 
-void kuramoto (int **A, double *theta, double *dtheta, double *w, double lambda){ //devuelve dtheta y theta;
+void kuramoto (int A[N][N], double *theta, double *dtheta, double *w, double lambda){ //devuelve dtheta y theta;
 
     int i, j;
     for(i=0;i<N;i++){
@@ -123,7 +126,7 @@ void kuramoto (int **A, double *theta, double *dtheta, double *w, double lambda)
     }
 
 }
-void runge_kutta(int **A, double *theta, double *w, double lambda, double dt) {
+void runge_kutta(int A[N][N], double *theta, double *w, double lambda, double dt) {
     double k1[N], k2[N], k3[N], k4[N];
     double dtheta[N];
 
@@ -169,13 +172,11 @@ double modulo_r(double *theta){
 void printear_file(char *lugar, double variable_x, double *variable_y){
     int i;
     FILE *f;
+    f=fopen(lugar,"a");
     for(i=0;i<N;i++){
         f = fprintf(lugar, "%lf %lf \n",variable_x, variable_y[i]);
     }
     fclose(f);
-    
-    
-
 }
 
 
