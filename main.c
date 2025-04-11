@@ -2,21 +2,45 @@
 #include <stdlib.h>
 #include <math.h>
 #define N 10
-#define RANDOM rand()/((double)RAND_MAX)
+#define RANDOM rand()/((double)RAND_MAX+1)
 #define PI acos(-1)
 
 void frecuencias(double *w);
 void fase_inicial(double *theta);
-void matriz_A( int **A);
-void kuramoto (int **A, double *theta, double *dtheta, double *w, double lambda);
+void matriz_A_ER( int **A);
+void matriz_A_BA( int **A);
+
+void kuramoto(int **A, double *theta, double *dtheta, double *w, double lambda);
 void runge_kutta(int **A, double *theta, double *w, double lambda, double dt);
 double modulo_r(double *theta);
+void printear_file(char *lugar, double variable_x, double *variable_y);
 
 //FALTA EL KUTTA
 int main()
 {
-    double t_final, delta_t, t_pasos;
-    double lamda_final, delta_lamda, lamda_pasos;
+    double w[N], theta[N], dtheta[N];
+    double r;
+    int A[N][N];
+    double t_final, t_inicial, delta_t;
+    double lamda_final, lamda_inicial, delta_lamda;
+    int i, j;
+    int pasos_t = (t_final-t_inicial)/delta_t;
+    int pasos_lamda = (lamda_final-lamda_inicial)/delta_lamda;
+    matriz_A_ER(A);
+    frecuencias(w);
+    //¿QUÉ THETAS INICIALES COGEMOS?
+    for(i = 0;i<delta_lamda;i++){
+        for(j = 0;j<delta_t; j++){
+            runge_kutta(theta, w, lamda, t_inicial + delta_t*j);
+            r = modulo_r(theta);
+            kuramoto(A, theta, dtheta, w, lamda);
+
+        }
+        // ANTES TENEMOS QUE VER CUANDO TERMALIZA  printear_file("results/r.txt", lamda_inicial+delta_lamda*i, r[i]);
+        
+        
+
+    }
     //hay que correr en lamda y luego en t;
 }
 
@@ -92,10 +116,9 @@ void kuramoto (int **A, double *theta, double *dtheta, double *w, double lambda)
         dtheta[i] = w[i];
         for(j = 0;j<N;j++){
             if(A[i][j]==1){
-                dtheta[i]+= sin(theta[j]-theta[i]);
+                dtheta[i]+= lamda*sin(theta[j]-theta[i]);
             }
-        }
-        dtheta[i] = dtheta[i]*lambda;
+        };
 
     }
 
@@ -141,6 +164,18 @@ double modulo_r(double *theta){
     p_imaginaria = p_imaginaria/N;
     r = sqrt(p_real*p_real + p_imaginaria*p_imaginaria);
     return r;
+}
+
+void printear_file(char *lugar, double variable_x, double *variable_y){
+    int i;
+    FILE *f;
+    for(i=0;i<N;i++){
+        f = fprintf(lugar, "%lf %lf \n",variable_x, variable_y[i]);
+    }
+    fclose(f);
+    
+    
+
 }
 
 
