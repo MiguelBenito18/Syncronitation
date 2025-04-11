@@ -24,26 +24,26 @@ int main()
     double ri[N]
     int A[N][N];
     double t_final, t_inicial, delta_t;
-    double lamda_final, lamda_inicial, delta_lamda;
+    double lambda_final, lambda_inicial, delta_lambda;
     int i, j;
     int pasos_t = (t_final-t_inicial)/delta_t;
-    int pasos_lamda = (lamda_final-lamda_inicial)/delta_lamda;
+    int pasos_lambda = (lambda_final-lambda_inicial)/delta_lambda;
     matriz_A_ER(A);
     frecuencias(w);
     //¿QUÉ THETAS INICIALES COGEMOS?
-    for(i = 0;i<delta_lamda;i++){
+    for(i = 0;i<delta_lambda;i++){
         for(j = 0;j<delta_t; j++){
-            runge_kutta(theta, w, lamda_inicial+delta_lamda*i, t_inicial + delta_t*j);
+            runge_kutta(theta, w, lambda_inicial+delta_lambda*i, t_inicial + delta_t*j);
             r = modulo_r(theta);
-            kuramoto(A, theta, dtheta, w, lamda_inicial+delta_lamda*i);
+            kuramoto(A, theta, dtheta, w, lambda_inicial+delta_lambda*i);
 
         }
-        // ANTES TENEMOS QUE VER CUANDO TERMALIZA  printear_file("results/r.txt", lamda_inicial+delta_lamda*i, r[i]);
+        // ANTES TENEMOS QUE VER CUANDO TERMALIZA  printear_file("results/r.txt", lambda_inicial+delta_lambda*i, r[i]);
         ri[i]=r;
-        printear_file(lugar,lamda_inicial+delta_lamda*i,ri[i])
+        printear_file(lugar,lambda_inicial+delta_lambda*i,ri[i])
 
     }
-    //hay que correr en lamda y luego en t;
+    //hay que correr en lambda y luego en t;
     
 }
 
@@ -119,7 +119,7 @@ void kuramoto (int A[N][N], double *theta, double *dtheta, double *w, double lam
         dtheta[i] = w[i];
         for(j = 0;j<N;j++){
             if(A[i][j]==1){
-                dtheta[i]+= lamda*sin(theta[j]-theta[i]);
+                dtheta[i]+= lambda*sin(theta[j]-theta[i]);
             }
         };
 
