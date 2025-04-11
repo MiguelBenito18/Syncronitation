@@ -19,3 +19,4 @@ typedef struct Point {
     double y;
 } Point;
 
+
