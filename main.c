@@ -52,6 +52,39 @@ void matriz_A_ER( int **A){
     }
 }
 
+void matriz_A_BA( int **A){
+    int i, j;
+    double p, random_aux;
+    int nodo_random;
+    //empezamos con 7 links todos conectados entre ellos
+    for(i=0;i<7;i++){
+        for(j=0;j<7;j++){
+            if(i==j){
+                A[i][i] = 0;
+            }
+            else{
+                A[j][i] = 1;
+            }
+        }
+    }
+    for(i=0;i<N;i++){//Todos los elementos de la diagonal son 0
+        A[i][i]=0;
+    }
+    for(i=7;i<N;i++){//hacemos el resto de nodos
+        for(j=0;j<6;j++){//escogemos 6 nodos aleatorios entre los ya existentes
+            nodo_random=(int)(i*RANDOM);
+            if(A[nodo_random,i]==1){
+                j--;
+            }
+            else{
+                A[nodo_random, i]= 1;
+                A[i, nodo_random]= 1;
+            }
+        }
+    }
+    
+}
+
 void kuramoto (int **A, double *theta, double *dtheta, double *w, double lambda){ //devuelve dtheta y theta;
 
     int i, j;
