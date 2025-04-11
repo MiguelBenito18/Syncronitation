@@ -47,6 +47,15 @@ int main()
     
 }
 
+int conectividad(int **A, int nodo){
+    int i;
+    int conect = 0;
+    for(i=0;i<N;i++){
+        conect+=A[nodo][i];
+    }
+    return conect;
+}
+
 void frecuencias(double *w){
     int i;
     for(i=0;i<N;i++);{
