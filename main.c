@@ -47,7 +47,7 @@ int main()
     
 }
 
-int conectividad(int **A, int nodo){
+int conectividad(int A[N][N], int nodo){
     int i;
     int conect = 0;
     for(i=0;i<N;i++){
@@ -75,14 +75,19 @@ void matriz_A_ER( int A[N][N]){
     int i, j;
     double p, random_aux;
     p = 6/199;
-    for(i=0;i<N;i++){
-        for(j=0;j<N;j++){
+    for(i=0;i<N;i++){//Los elementos de la diagonal son ceros
+        A[i][i]=0;
+    }    
+    for(i=0;i<(N-1);i++){
+        for(j=(i+1);j<N;j++){
             random_aux = RANDOM;
             if(random_aux<p){
                 A[i][j] = 1;
+                A[j][i] = 1;
             }
             else{
                 A[i][j] = 0;
+                A[j][i] = 0;
             }
         }
     }
@@ -92,16 +97,10 @@ void matriz_A_BA( int A[N][N]){
     int i, j;
     double p, random_aux;
     int nodo_random;
-    //empezamos con 7 links todos conectados entre ellos
+    //empezamos con 7 nodos todos conectados entre ellos
     for(i=0;i<7;i++){
         for(j=0;j<7;j++){
-            if(i==j){
-                A[i][i] = 0;
-            }
-            else{
-                A[j][i] = 1;
-            }
-        }
+            A[i][j]=1;
     }
     for(i=0;i<N;i++){//Todos los elementos de la diagonal son 0
         A[i][i]=0;
