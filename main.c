@@ -71,10 +71,10 @@ void fase_inicial(double *theta){
     }
 }
 
-void matriz_A_ER( int A[N][N]){
+void matriz_A_ER( int A[N][N], int k){
     int i, j;
     double p, random_aux;
-    p = 6/199;
+    p = k/199;
     for(i=0;i<N;i++){//Los elementos de la diagonal son ceros
         A[i][i]=0;
     }    
@@ -93,8 +93,8 @@ void matriz_A_ER( int A[N][N]){
     }
 }
 
-void matriz_A_BA( int A[N][N]){
-    int i, j,k;
+void matriz_A_BA( int A[N][N], int k){//funciona solo para k par
+    int i, j,m;
     double p, random_aux;
     int nodo_random;
     
@@ -103,27 +103,27 @@ void matriz_A_BA( int A[N][N]){
             A[i][j]=0;
         }
     }
-    //empezamos con 4 nodos todos conectados entre ellos
-    for(i=0;i<4;i++){
-        for(j=0;j<4;j++){
+    //empezamos con k+1 nodos todos conectados entre ellos
+    for(i=0;i<(k+1);i++){
+        for(j=0;j<(k+1);j++){
             if(i!=j){
                 A[i][j]=1;
             }
         }
     }
     //hacemos el resto de nodos
-    for(i=4;i<N;i++){
-        for(j=0;j<3;j++){//hacemos tres conexiones por cada nodo nuevo creado
+    for(i=(k+1);i<N;i++){
+        for(j=0;j<(k/2);j++){//hacemos k/2 conexiones por cada nodo nuevo creado
             random_aux=RANDOM;
-            k=0
+            m=0
             while(random_aux>0){//método para elejir el nodo segun la probabilidad Barabasi Albert
-                random_aux=random_aux-conectividad(int A[N][N],k)/(3*i+j);
-                k++;
+                random_aux=random_aux-conectividad(int A[N][N],m)/(k*i/2+j);
+                m++;
             }
-            if(A[k-1][i]==1){//Nos aseguramos de no volver a escoger el mismo nodo
+            if(A[m-1][i]==1){//Nos aseguramos de no volver a escoger el mismo nodo
                 j--;
             } else{
-                A[k-1][i]=1;
+                A[m-1][i]=1;
             }
         }
     }
