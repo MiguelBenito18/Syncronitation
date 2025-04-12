@@ -94,26 +94,36 @@ void matriz_A_ER( int A[N][N]){
 }
 
 void matriz_A_BA( int A[N][N]){
-    int i, j;
+    int i, j,k;
     double p, random_aux;
     int nodo_random;
-    //empezamos con 7 nodos todos conectados entre ellos
-    for(i=0;i<7;i++){
-        for(j=0;j<7;j++){
-            A[i][j]=1;
+    
+    for(i=0;i<N;i++){//Empezamos con todo ceros
+        for(j=0;j<N;j++){
+            A[i][j]=0;
+        }
     }
-    for(i=0;i<N;i++){//Todos los elementos de la diagonal son 0
-        A[i][i]=0;
-    }
-    for(i=7;i<N;i++){//hacemos el resto de nodos
-        for(j=0;j<6;j++){//escogemos 6 nodos aleatorios entre los ya existentes
-            nodo_random=(int)(i*RANDOM);
-            if(A[nodo_random,i]==1){
-                j--;
+    //empezamos con 4 nodos todos conectados entre ellos
+    for(i=0;i<4;i++){
+        for(j=0;j<4;j++){
+            if(i!=j){
+                A[i][j]=1;
             }
-            else{
-                A[nodo_random, i]= 1;
-                A[i, nodo_random]= 1;
+        }
+    }
+    //hacemos el resto de nodos
+    for(i=4;i<N;i++){
+        for(j=0;j<3;j++){//hacemos tres conexiones por cada nodo nuevo creado
+            random_aux=RANDOM;
+            k=0
+            while(random_aux>0){//método para elejir el nodo segun la probabilidad Barabasi Albert
+                random_aux=random_aux-conectividad(int A[N][N],k)/(6*i+j);
+                k++;
+            }
+            if(A[k-1][i]==1){//Nos aseguramos de no volver a escoger el mismo nodo
+                j--;
+            } else{
+                A[k-1][i]=1;
             }
         }
     }
