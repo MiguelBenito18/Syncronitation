@@ -117,7 +117,7 @@ void matriz_A_BA( int A[N][N]){
             random_aux=RANDOM;
             k=0
             while(random_aux>0){//método para elejir el nodo segun la probabilidad Barabasi Albert
-                random_aux=random_aux-conectividad(int A[N][N],k)/(6*i+j);
+                random_aux=random_aux-conectividad(int A[N][N],k)/(3*i+j);
                 k++;
             }
             if(A[k-1][i]==1){//Nos aseguramos de no volver a escoger el mismo nodo
