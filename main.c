@@ -112,19 +112,19 @@ void runge_kutta(int A[N][N], double *theta, double *w, double lambda, double dt
 
     // Calcular k2
     for (int i = 0; i < N; i++) {
-        dtheta[i] = theta[i] + 0.5 * dt * k1[i];
+        theta[i] = theta[i] + 0.5 * dt * k1[i];
     }
     kuramoto(A, theta, k2, w, lambda);
 
     // Calcular k3
     for (int i = 0; i < N; i++) {
-        dtheta[i] = theta[i] + 0.5 * dt * k2[i];
+        theta[i] = theta[i] + 0.5 * dt * k2[i];
     }
     kuramoto(A, theta, k3, w, lambda);
 
     // Calcular k4
     for (int i = 0; i < N; i++) {
-        dtheta[i] = theta[i] + dt * k3[i];
+        theta[i] = theta[i] + dt * k3[i];
     }
     kuramoto(A, theta, k4, w, lambda);
 
