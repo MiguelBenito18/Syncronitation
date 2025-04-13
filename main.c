@@ -187,12 +187,12 @@ double modulo_r(double *theta){
     return r;
 }
 
-void printear_file(char *lugar, double variable_x, double *variable_y){
+void printear_file(char *lugar, double *variable_x, double *variable_y){
     int i;
     FILE *f;
     f=fopen(lugar,"a");
     for(i=0;i<N;i++){
-        f = fprintf(lugar, "%lf %lf \n",variable_x, variable_y[i]);
+        f = fprintf(lugar, "%lf %lf \n",variable_x[i], variable_y[i]);
     }
     fclose(f);
 }
