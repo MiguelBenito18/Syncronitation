@@ -24,13 +24,14 @@ int main()
     double ri[N]
     int A[N][N];
     double t_final, t_inicial, delta_t;
-    double lambda_final, lambda_inicial, delta_lambda;
+    double lambda_final=1.6; lambda_inicial=0.4; delta_lambda=0.02;//Más o menos como en el artículo
     int i, j;
     int pasos_t = (t_final-t_inicial)/delta_t;
     int pasos_lambda = (lambda_final-lambda_inicial)/delta_lambda;
     matriz_A_ER(A);
     frecuencias(w);
     //¿QUÉ THETAS INICIALES COGEMOS?
+    fase_inicial(theta);
     for(i = 0;i<delta_lambda;i++){
         for(j = 0;j<delta_t; j++){
             runge_kutta(theta, w, lambda_inicial+delta_lambda*i, t_inicial + delta_t*j);
