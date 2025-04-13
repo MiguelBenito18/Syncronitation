@@ -160,17 +160,18 @@ void printear_file(char *lugar, double *variable_x, double *variable_y){
 int main()
 {
     char *lugar="results/r.txt";
-    double w[N], theta[N], dtheta[N];
+    double w[N], theta[N], dtheta[N], fase_comienzo[N];
     double r;
     double ri[N]
     int A[N][N];
-    double t_final, t_inicial, delta_t;
+    double t_final=10; double t_inicial=0; double delta_t=0.01;//Por probar xd
     double lambda_final=1.6; lambda_inicial=0.4; delta_lambda=0.02;//Más o menos como en el artículo
     int i, j;
     int pasos_t = (t_final-t_inicial)/delta_t;
     int pasos_lambda = (lambda_final-lambda_inicial)/delta_lambda;
     matriz_A_ER(A);
     frecuencias(w);
+    /*
     //¿QUÉ THETAS INICIALES COGEMOS?
     fase_inicial(theta);
     for(i = 0;i<delta_lambda;i++){
@@ -183,8 +184,40 @@ int main()
         // ANTES TENEMOS QUE VER CUANDO TERMALIZA  printear_file("results/r.txt", lambda_inicial+delta_lambda*i, r[i]);
         ri[i]=r;
         printear_file(lugar,lambda_inicial+delta_lambda*i,ri[i])
-
     }
-    //hay que correr en lambda y luego en t;
+
+*/
+    
+    //hay que correr en lambda y luego en t
+    //EVOLUCIÓN TEMPORAL Y CÁLCULO DE r PARA CADA LAMBDA
+    fase_inicial(fase_comienzo);
+    for(i=0;i<N;i++){
+        fase_comienzo[i]=theta[i];//fase_comienzo será la fase en la que empezaremos para todas las lambdas diferentes
+    }
+
+    for(i=0;i<pasos_lambda;i++){
+        lambdas[i]=lambda_inicial+i*delta_lambda;//guardamos las lambdas para las que calculamos r
+        for(int k = 0; k < N; k++) {//fijamos las fases a las fases de comienzo
+            theta[k] = fase_comienzo[k];
+        }
+
+        for(j=0;j<pasos_t;j++){//evolucion temporal en pasos_t pasos de delta_t
+            runge_kutta(A, theta, w,(lambda_inicial+i*delta_lambda), delta_t);
+        }
+        r[i]=modulo_r(theta);//cálculo de r (asumo que ya hemos llegado al equilibrio)
+    }
+
+    //Pasar los datos a un fichero
+    FILE *f = fopen(lugar, "w");
+    if (f == NULL) {
+        printf("Error: No se pudo crear el archivo %s\n", lugar);
+        return;
+    }
+
+    for(int i = 0; i < N; i++) {
+        fprintf(f, "%lf %lf\n", lambdas[i], r[i]);
+    }
+
+    fclose(f);
     
 }
