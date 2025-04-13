@@ -5,48 +5,6 @@
 #define RANDOM rand()/((double)RAND_MAX+1)
 #define PI acos(-1)
 
-void frecuencias(double *w);
-void fase_inicial(double *theta);
-void matriz_A_ER( int A[N][N]);
-void matriz_A_BA( int A[N][N]);
-
-void kuramoto(int A[N][N], double *theta, double *dtheta, double *w, double lambda);
-void runge_kutta(int A[N][N], double *theta, double *w, double lambda, double dt);
-double modulo_r(double *theta);
-void printear_file(char *lugar, double variable_x, double *variable_y);
-
-//FALTA EL KUTTA
-int main()
-{
-    char lugar="results/r.txt";
-    double w[N], theta[N], dtheta[N];
-    double r;
-    double ri[N]
-    int A[N][N];
-    double t_final, t_inicial, delta_t;
-    double lambda_final=1.6; lambda_inicial=0.4; delta_lambda=0.02;//Más o menos como en el artículo
-    int i, j;
-    int pasos_t = (t_final-t_inicial)/delta_t;
-    int pasos_lambda = (lambda_final-lambda_inicial)/delta_lambda;
-    matriz_A_ER(A);
-    frecuencias(w);
-    //¿QUÉ THETAS INICIALES COGEMOS?
-    fase_inicial(theta);
-    for(i = 0;i<delta_lambda;i++){
-        for(j = 0;j<delta_t; j++){
-            runge_kutta(theta, w, lambda_inicial+delta_lambda*i, t_inicial + delta_t*j);
-            r = modulo_r(theta);
-            kuramoto(A, theta, dtheta, w, lambda_inicial+delta_lambda*i);
-
-        }
-        // ANTES TENEMOS QUE VER CUANDO TERMALIZA  printear_file("results/r.txt", lambda_inicial+delta_lambda*i, r[i]);
-        ri[i]=r;
-        printear_file(lugar,lambda_inicial+delta_lambda*i,ri[i])
-
-    }
-    //hay que correr en lambda y luego en t;
-    
-}
 
 int conectividad(int A[N][N], int nodo){
     int i;
@@ -198,4 +156,35 @@ void printear_file(char *lugar, double *variable_x, double *variable_y){
     fclose(f);
 }
 
+//FALTA EL KUTTA
+int main()
+{
+    char *lugar="results/r.txt";
+    double w[N], theta[N], dtheta[N];
+    double r;
+    double ri[N]
+    int A[N][N];
+    double t_final, t_inicial, delta_t;
+    double lambda_final=1.6; lambda_inicial=0.4; delta_lambda=0.02;//Más o menos como en el artículo
+    int i, j;
+    int pasos_t = (t_final-t_inicial)/delta_t;
+    int pasos_lambda = (lambda_final-lambda_inicial)/delta_lambda;
+    matriz_A_ER(A);
+    frecuencias(w);
+    //¿QUÉ THETAS INICIALES COGEMOS?
+    fase_inicial(theta);
+    for(i = 0;i<delta_lambda;i++){
+        for(j = 0;j<delta_t; j++){
+            runge_kutta(theta, w, lambda_inicial+delta_lambda*i, t_inicial + delta_t*j);
+            r = modulo_r(theta);
+            kuramoto(A, theta, dtheta, w, lambda_inicial+delta_lambda*i);
 
+        }
+        // ANTES TENEMOS QUE VER CUANDO TERMALIZA  printear_file("results/r.txt", lambda_inicial+delta_lambda*i, r[i]);
+        ri[i]=r;
+        printear_file(lugar,lambda_inicial+delta_lambda*i,ri[i])
+
+    }
+    //hay que correr en lambda y luego en t;
+    
+}
