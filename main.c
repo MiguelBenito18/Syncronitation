@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#define N 10
-#define RANDOM rand()/((double)RAND_MAX+1)
+#define N 200
+#define RANDOM rand()/((double)RAND_MAX)
 #define PI acos(-1)
 
 
@@ -17,7 +17,7 @@ int conectividad(int A[N][N], int nodo){
 
 void frecuencias(double *w){
     int i;
-    for(i=0;i<N;i++);{
+    for(i=0;i<N;i++){
         w[i] = -0.5 + RANDOM;
     }
 
@@ -26,19 +26,17 @@ void frecuencias(double *w){
 void fase_inicial(double *theta){
     int i;
     for(i=0; i<N; i++){
-        theta[i]=2*PI*RANDOM;
+        theta[i]=-PI * 2*PI*RANDOM;
     }
 }
 
 void matriz_A_ER( int A[N][N], int k){
     int i, j;
     double p, random_aux;
-    p = k/199;
-    for(i=0;i<N;i++){//Los elementos de la diagonal son ceros
-        A[i][i]=0;
-    }    
+    p = ((double)k)/(N-1);
     for(i=0;i<(N-1);i++){
         for(j=(i+1);j<N;j++){
+
             random_aux = RANDOM;
             if(random_aux<p){
                 A[i][j] = 1;
@@ -50,13 +48,16 @@ void matriz_A_ER( int A[N][N], int k){
             }
         }
     }
+    for(i=0;i<N;i++){//Los elementos de la diagonal son ceros
+        A[i][i]=0;
+    }
 }
 
 void matriz_A_BA( int A[N][N], int k){//funciona solo para k par
     int i, j,m;
     double p, random_aux;
     int nodo_random;
-    
+
     for(i=0;i<N;i++){//Empezamos con todo ceros
         for(j=0;j<N;j++){
             A[i][j]=0;
@@ -74,9 +75,9 @@ void matriz_A_BA( int A[N][N], int k){//funciona solo para k par
     for(i=(k+1);i<N;i++){
         for(j=0;j<(k/2);j++){//hacemos k/2 conexiones por cada nodo nuevo creado
             random_aux=RANDOM;
-            m=0
+            m=0;
             while(random_aux>0){//método para elejir el nodo segun la probabilidad Barabasi Albert
-                random_aux=random_aux-conectividad(int A[N][N],m)/(k*i/2+j);
+                random_aux=random_aux-conectividad(A,m)/(k*i/2+j);
                 m++;
             }
             if(A[m-1][i]==1){//Nos aseguramos de no volver a escoger el mismo nodo
@@ -86,7 +87,10 @@ void matriz_A_BA( int A[N][N], int k){//funciona solo para k par
             }
         }
     }
-    
+    for(i=0;i<N;i++){//Los elementos de la diagonal son ceros
+        A[i][i]=0;
+    }
+
 }
 
 void kuramoto (int A[N][N], double *theta, double *dtheta, double *w, double lambda){ //devuelve dtheta y theta;
@@ -105,31 +109,31 @@ void kuramoto (int A[N][N], double *theta, double *dtheta, double *w, double lam
 }
 void runge_kutta(int A[N][N], double *theta, double *w, double lambda, double dt) {
     double k1[N], k2[N], k3[N], k4[N];
-    double dtheta[N];
+    double temp[N], theta_orig[N];
 
-    // Calcular k1
-    kuramoto(A, theta, k1, w, lambda);
-
-    // Calcular k2
     for (int i = 0; i < N; i++) {
-        theta[i] = theta[i] + 0.5 * dt * k1[i];
+        theta_orig[i] = theta[i];
     }
-    kuramoto(A, theta, k2, w, lambda);
 
-    // Calcular k3
+    kuramoto(A, theta_orig, k1, w, lambda);
+
     for (int i = 0; i < N; i++) {
-        theta[i] = theta[i] + 0.5 * dt * k2[i];
+        temp[i] = theta_orig[i] + 0.5 * dt * k1[i];
     }
-    kuramoto(A, theta, k3, w, lambda);
+    kuramoto(A, temp, k2, w, lambda);
 
-    // Calcular k4
     for (int i = 0; i < N; i++) {
-        theta[i] = theta[i] + dt * k3[i];
+        temp[i] = theta_orig[i] + 0.5 * dt * k2[i];
     }
-    kuramoto(A, theta, k4, w, lambda);
+    kuramoto(A, temp, k3, w, lambda);
 
     for (int i = 0; i < N; i++) {
-        theta[i] += (dt / 6.0) * (k1[i] + 2*k2[i] + 2*k3[i] + k4[i]);
+        temp[i] = theta_orig[i] + dt * k3[i];
+    }
+    kuramoto(A, temp, k4, w, lambda);
+
+    for (int i = 0; i < N; i++) {
+        theta[i] = theta_orig[i] + (dt / 6.0) * (k1[i] + 2*k2[i] + 2*k3[i] + k4[i]);
     }
 }
 
@@ -138,7 +142,7 @@ double modulo_r(double *theta){
     double p_real=0, p_imaginaria=0, r;
     for(i=0;i<N;i++){
         p_real+= cos(theta[i]);
-        p_imaginaria+= sen(theta[i]);
+        p_imaginaria+= sin(theta[i]);
     }
     p_real= p_real/N;
     p_imaginaria = p_imaginaria/N;
@@ -151,70 +155,109 @@ void printear_file(char *lugar, double *variable_x, double *variable_y){
     FILE *f;
     f=fopen(lugar,"a");
     for(i=0;i<N;i++){
-        f = fprintf(lugar, "%lf %lf \n",variable_x[i], variable_y[i]);
+        fprintf(lugar, "%lf %lf \n",variable_x[i], variable_y[i]);
     }
     fclose(f);
 }
 
-//FALTA EL KUTTA
+
+void genera_histograma(double *x, int x_data, double *histo, int n_histo, double *min, double *delta){
+    int i,indice;
+    double norma;
+    double  histo_min= x[0], histo_max=x[0];
+    for(i = 0;i<x_data;i++){
+        if(histo_min>x[i]){
+            histo_min = x[i];
+        }
+        if(histo_max<x[i]){
+            histo_max = x[i];
+        }
+    }
+    double longitud = (histo_max-histo_min)/n_histo;
+    norma = x_data*longitud;
+
+    for(i=0;i<n_histo;i++){
+        histo[i]=0;
+    }
+    for(i=0;i<x_data;i++){
+        indice = (x[i]-histo_min)/longitud;
+        if(indice == n_histo){
+            indice = n_histo-1;
+        }
+        histo[indice]++;
+    }
+    for(i=0;i<x_data;i++){
+        histo[i] = histo[i]/norma;
+    }
+    *min = histo_min;
+    *delta = longitud;
+
+
+
+
+}
+void distribucion_grado_parte_0_2(int A[N][N],int k){
+    /*CON N 200 SE VE BIEN, PARA N GRANDES NO CORRE*/
+    matriz_A_ER(A, k);
+    FILE *f1;
+    f1 = fopen("conexiones_cada_nodo_ER.txt", "w");
+    double conexiones_vector[N];
+    double histo[10];
+    int conexiones_aux = 0;
+    for(int i=0;i<N;i++){
+        for(int j = 0;j<N;j++){
+            conexiones_aux+=A[i][j];
+            }
+        conexiones_vector[i] = ((double)conexiones_aux);
+        fprintf(f1, "%d\n", conexiones_aux);
+        conexiones_aux = 0;
+
+        }
+    fclose(f1);
+    double histo_min, delta_histo;
+    genera_histograma(conexiones_vector,N, histo, 10, &histo_min, &delta_histo);
+    FILE *f;
+    f = fopen("histograma_ER.txt", "w");
+    for(int i=0;i<10;i++){
+        fprintf(f, "%lf %lf\n",histo_min+delta_histo*i,histo[i]);
+    }
+    fclose(f);
+
+}
+
 int main()
 {
-    char *lugar="results/r.txt";
+    FILE *f;
+    f = fopen("resultados_r.txt", "w");
     double w[N], theta[N], dtheta[N], fase_comienzo[N];
     double r;
-    double ri[N]
     int A[N][N];
-    double t_final=10; double t_inicial=0; double delta_t=0.01;//Por probar xd
-    double lambda_final=1.6; lambda_inicial=0.4; delta_lambda=0.02;//Más o menos como en el artículo
+    double t_final=100000, t_inicial=0, delta_t=1;//Por probar xd
+    double lambda_final=2, lambda_inicial=0.5 , delta_lambda=0.2;//Más o menos como en el artículo
     int i, j;
     int pasos_t = (t_final-t_inicial)/delta_t;
     int pasos_lambda = (lambda_final-lambda_inicial)/delta_lambda;
-    matriz_A_ER(A);
+    matriz_A_ER(A,6);
     frecuencias(w);
-    /*
+    int t_thermal = 10000;
     //¿QUÉ THETAS INICIALES COGEMOS?
     fase_inicial(theta);
-    for(i = 0;i<delta_lambda;i++){
-        for(j = 0;j<delta_t; j++){
-            runge_kutta(theta, w, lambda_inicial+delta_lambda*i, t_inicial + delta_t*j);
-            r = modulo_r(theta);
-            kuramoto(A, theta, dtheta, w, lambda_inicial+delta_lambda*i);
+    for(i = 0;i<pasos_lambda;i++){
+        for(j = 0;j<pasos_t; j++){
+            runge_kutta(A, theta, w, lambda_inicial+delta_lambda*i, t_inicial + delta_t*j);
+            if (j >= t_thermal) { //MEDIMOS A PARTIR DE AQUI, QUE SUPONGO QUE LLEGA A ESTADO ESTACIONARIO PERO NO ES ASÍ
+            r += modulo_r(theta);
+            }
 
         }
-        // ANTES TENEMOS QUE VER CUANDO TERMALIZA  printear_file("results/r.txt", lambda_inicial+delta_lambda*i, r[i]);
-        ri[i]=r;
-        printear_file(lugar,lambda_inicial+delta_lambda*i,ri[i])
+        r /= (t_final - t_thermal); //HACEMOS LA MEDIA DE LAS MEDIDAS DENTRO DEL IF
+        printf("%lf ", r);
+        fprintf(f, "%lf %lf \n",lambda_inicial+delta_lambda*i, r );
+        r = 0;
+
     }
 
-*/
-    
-    //hay que correr en lambda y luego en t
-    //EVOLUCIÓN TEMPORAL Y CÁLCULO DE r PARA CADA LAMBDA
-    fase_inicial(fase_comienzo);
 
-    for(i=0;i<pasos_lambda;i++){
-        lambdas[i]=lambda_inicial+i*delta_lambda;//guardamos las lambdas para las que calculamos r
-        for(int k = 0; k < N; k++) {//fijamos las fases a las fases de comienzo
-            theta[k] = fase_comienzo[k];
-        }
+    return 0;
 
-        for(j=0;j<pasos_t;j++){//evolucion temporal en pasos_t pasos de delta_t
-            runge_kutta(A, theta, w,(lambda_inicial+i*delta_lambda), delta_t);
-        }
-        r[i]=modulo_r(theta);//cálculo de r (asumo que ya hemos llegado al equilibrio)
-    }
-
-    //Pasar los datos a un fichero
-    FILE *f = fopen(lugar, "w");
-    if (f == NULL) {
-        printf("Error: No se pudo crear el archivo %s\n", lugar);
-        return;
-    }
-
-    for(int i = 0; i < pasos_lambda; i++) {
-        fprintf(f, "%lf %lf\n", lambdas[i], r[i]);
-    }
-
-    fclose(f);
-    
 }
