@@ -191,9 +191,6 @@ int main()
     //hay que correr en lambda y luego en t
     //EVOLUCIÓN TEMPORAL Y CÁLCULO DE r PARA CADA LAMBDA
     fase_inicial(fase_comienzo);
-    for(i=0;i<N;i++){
-        fase_comienzo[i]=theta[i];//fase_comienzo será la fase en la que empezaremos para todas las lambdas diferentes
-    }
 
     for(i=0;i<pasos_lambda;i++){
         lambdas[i]=lambda_inicial+i*delta_lambda;//guardamos las lambdas para las que calculamos r
@@ -214,7 +211,7 @@ int main()
         return;
     }
 
-    for(int i = 0; i < N; i++) {
+    for(int i = 0; i < pasos_lambda; i++) {
         fprintf(f, "%lf %lf\n", lambdas[i], r[i]);
     }
 
