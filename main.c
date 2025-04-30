@@ -107,23 +107,19 @@ void matrizaAredes(int* A[N], double alpha, int conectividad){
     }
     if (alpha==1.0){
         p=(double) conectividad/(N-1.0);
-        for (i=0;i<N;i++){
-            for (j=0;j<(i+1);j++){
-                if (j==i){
-                    A[i][j]=0;
-                }
-                else{
-                    num=genNumRandom(0,1);
-                    if (num<=p){
-                        A[i][j]=1;
-                    }
-                    else{
-                        A[i][j]=0;
-                    }
-                }
-                A[j][i]=A[i][j];
-            }
+        for (i = 0; i < N; i++) {
+    for (j = i + 1; j < N; j++) {
+        num = genNumRandom(0,1);
+        if (num <= p) {
+            A[i][j] = 1;
+            A[j][i] = 1;
+        } else {
+            A[i][j] = 0;
+            A[j][i] = 0;
         }
+    }
+    A[i][i] = 0; // Por si acaso
+}
     }
     else{
         for (i=0;i<N;i++){
