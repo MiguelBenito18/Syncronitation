@@ -1,100 +1,168 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
 #include <math.h>
-#define N 200
-#define RANDOM rand()/((double)RAND_MAX)
+
+#define N 10000 //Numero de nodos de la red
+#define L 9999 //Numero de intervalos del histograma
+#define Medidas 100
 #define PI acos(-1)
+#define redes
 
+using namespace std;
 
-int conectividad(int A[N][N], int nodo){
-    int i;
-    int conect = 0;
-    for(i=0;i<N;i++){
-        conect+=A[nodo][i];
-    }
-    return conect;
+double genNumRandom (double a, double b){
+    double ran;
+    ran=a+(b-a)*rand()/((double)RAND_MAX+1);
+    return ran;
 }
-
-void frecuencias(double *w){
-    int i;
-    for(i=0;i<N;i++){
-        w[i] = -0.5 + RANDOM;
+void histograma(int *data, double *H, int Ndata, int Nintervalos, double *d, int *m, int *M){
+    double delta=0.0;
+    int minimo, maximo;
+    double norm;
+    int i,indice;
+    minimo=data[0];
+    maximo=minimo;
+    //calculo del valor maximo y minimo
+    for (i=1; i<Ndata;i++){
+        if (data[i]>maximo){
+            maximo=data[i];
+        }
+        if (data[i]<minimo){
+            minimo=data[i];
+        }
     }
-
-}
-
-void fase_inicial(double *theta){
-    int i;
-    for(i=0; i<N; i++){
-        theta[i]=-PI * 2*PI*RANDOM;
+    *m=minimo;
+    *M=maximo;
+    //calculo de la delta
+    delta=(double)(maximo-minimo)/Nintervalos;
+    *d=delta;
+    //creacion de histograma
+    for (i=0;i<N;i++){
+        H[i]=0;
+    }
+    for (i=0;i<Ndata;i++){
+        indice=(data[i]-minimo)/delta;
+        if (indice==Nintervalos){
+            indice--;
+        }
+        H[indice]++;
+    }
+    //Normalizar Histograma
+    norm=1.0/(delta*Ndata);
+    for (i=0;i<Nintervalos;i++){
+        H[i]*=norm;
     }
 }
-
-void matriz_A_ER( int A[N][N], int k){
-    int i, j;
-    double p, random_aux;
-    p = ((double)k)/(N-1);
-    for(i=0;i<(N-1);i++){
-        for(j=(i+1);j<N;j++){
-
-            random_aux = RANDOM;
-            if(random_aux<p){
-                A[i][j] = 1;
-                A[j][i] = 1;
+double promedio(double *x, int d){
+    int i;
+    double med=0.0;
+    for (i=0;i<d;i++){
+        med+=x[i];
+    }
+    med/=d;
+    return med;
+}
+#ifdef Kuramoto
+void matrizAKuramoto(int *A[N]){
+    int i,j;
+    for (i=0;i<N;i++){
+        for (j=0;j<N;j++){
+            if (i==j){
+                A[i][j]=0;
             }
             else{
-                A[i][j] = 0;
-                A[j][i] = 0;
-            }
-        }
-    }
-    for(i=0;i<N;i++){//Los elementos de la diagonal son ceros
-        A[i][i]=0;
-    }
-}
-
-void matriz_A_BA( int A[N][N], int k){//funciona solo para k par
-    int i, j,m;
-    double p, random_aux;
-    int nodo_random;
-
-    for(i=0;i<N;i++){//Empezamos con todo ceros
-        for(j=0;j<N;j++){
-            A[i][j]=0;
-        }
-    }
-    //empezamos con k+1 nodos todos conectados entre ellos
-    for(i=0;i<(k+1);i++){
-        for(j=0;j<(k+1);j++){
-            if(i!=j){
                 A[i][j]=1;
             }
         }
     }
-    //hacemos el resto de nodos
-    for(i=(k+1);i<N;i++){
-        for(j=0;j<(k/2);j++){//hacemos k/2 conexiones por cada nodo nuevo creado
-            random_aux=RANDOM;
-            m=0;
-            while(random_aux>0){//método para elejir el nodo segun la probabilidad Barabasi Albert
-                random_aux=random_aux-conectividad(A,m)/(k*i/2+j);
-                m++;
-            }
-            if(A[m-1][i]==1){//Nos aseguramos de no volver a escoger el mismo nodo
-                j--;
-            } else{
-                A[m-1][i]=1;
+}
+#endif // Kuramoto
+#ifdef redes
+double prob(int *k,double alpha, int d,int j){
+    int i;
+    double p,sum;
+    sum=0.0;
+    for (i=0;i<(d-1);i++){
+        sum+=k[i]+alpha;
+    }
+    p=(k[j]+alpha)/sum;
+    return p;
+}
+void cuentaVecinos(int *A[N], int *k, int i, int j){
+    if (A[i][j]==1){
+        k[i]++;
+        k[j]++;
+    }
+}
+
+void matrizaAredes(int* A[N], double alpha, int conectividad){
+    int i,j,cuenta;
+    int k[N];
+    double p,num;
+    for (i=0;i<N;i++){
+        for (j=0;j<N;j++){
+            A[i][j]=0;
+        }
+        k[i]=0;
+    }
+    if (alpha==1.0){
+        p=(double) conectividad/(N-1.0);
+        for (i=0;i<N;i++){
+            for (j=0;j<(i+1);j++){
+                if (j==i){
+                    A[i][j]=0;
+                }
+                else{
+                    num=genNumRandom(0,1);
+                    if (num<=p){
+                        A[i][j]=1;
+                    }
+                    else{
+                        A[i][j]=0;
+                    }
+                }
+                A[j][i]=A[i][j];
             }
         }
     }
-    for(i=0;i<N;i++){//Los elementos de la diagonal son ceros
-        A[i][i]=0;
+    else{
+        for (i=0;i<N;i++){
+            cuenta=0;
+            for (j=0;j<(i+1);j++){
+                if (j==i){
+                    A[i][j]=0;
+                }
+                else{
+                    if (i<5){
+                        A[i][j]=1;
+                    }
+                    else{
+                        if (cuenta<conectividad/2){
+                            p=prob(k,alpha,i+1,j);
+                            num=genNumRandom(0.0,1.0);
+                            if (num<=p){
+                                A[i][j]=1;
+                                cuenta++;
+                            }
+                            else{
+                                A[i][j]=0;
+                            }
+                        }
+                        else{
+                            A[i][j]=0;
+                        }
+                    }
+                }
+                A[j][i]=A[i][j];
+                cuentaVecinos(A,k,i,j);
+                printf("%d",A[i][j]);
+            }
+            printf("\n%d\n",i+1);
+        }
     }
-
 }
-
-void kuramoto (int A[N][N], double *theta, double *dtheta, double *w, double lambda){ //devuelve dtheta y theta;
-
+#endif // redes
+void kuramoto (int *A[N], double *theta, double *dtheta, double *w, double lambda){ //devuelve dtheta y theta;
     int i, j;
     for(i=0;i<N;i++){
         dtheta[i] = w[i];
@@ -102,162 +170,226 @@ void kuramoto (int A[N][N], double *theta, double *dtheta, double *w, double lam
             if(A[i][j]==1){
                 dtheta[i]+= lambda*sin(theta[j]-theta[i]);
             }
-        };
-
-    }
-
-}
-void runge_kutta(int A[N][N], double *theta, double *w, double lambda, double dt) {
-    double k1[N], k2[N], k3[N], k4[N];
-    double temp[N], theta_orig[N];
-
-    for (int i = 0; i < N; i++) {
-        theta_orig[i] = theta[i];
-    }
-
-    kuramoto(A, theta_orig, k1, w, lambda);
-
-    for (int i = 0; i < N; i++) {
-        temp[i] = theta_orig[i] + 0.5 * dt * k1[i];
-    }
-    kuramoto(A, temp, k2, w, lambda);
-
-    for (int i = 0; i < N; i++) {
-        temp[i] = theta_orig[i] + 0.5 * dt * k2[i];
-    }
-    kuramoto(A, temp, k3, w, lambda);
-
-    for (int i = 0; i < N; i++) {
-        temp[i] = theta_orig[i] + dt * k3[i];
-    }
-    kuramoto(A, temp, k4, w, lambda);
-
-    for (int i = 0; i < N; i++) {
-        theta[i] = theta_orig[i] + (dt / 6.0) * (k1[i] + 2*k2[i] + 2*k3[i] + k4[i]);
+        }
     }
 }
+void igualaVector(double *v1, double *v2, int d){
+    for (int i=0;i<d;i++){
+        v1[i]=v2[i];
+    }
+}
+double moduloImaginario(double preal, double pimaginaria){
+    double modulo;
+    modulo=sqrt(preal*preal+pimaginaria*pimaginaria);
+    return modulo;
+}
 
-double modulo_r(double *theta){
+void RK4 (double h,double *w, double lambda, double *theta, int *A[N]){
     int i;
-    double p_real=0, p_imaginaria=0, r;
-    for(i=0;i<N;i++){
-        p_real+= cos(theta[i]);
-        p_imaginaria+= sin(theta[i]);
+    double k1[N], k2[N], k3[N], k4[N];
+    double thetacopia[N];
+    //Calculo k1
+    kuramoto(A,theta,k1,w,lambda);
+    //Calculo k2
+    for (i=0;i<N;i++){
+        thetacopia[i]=theta[i]+h/2.0*k1[i];
     }
-    p_real= p_real/N;
-    p_imaginaria = p_imaginaria/N;
-    r = sqrt(p_real*p_real + p_imaginaria*p_imaginaria);
+    kuramoto(A,thetacopia,k2,w,lambda);
+    //Calculo k3
+    for (i=0;i<N;i++){
+        thetacopia[i]=theta[i]+h/2.0*k2[i];
+    }
+    kuramoto(A,thetacopia,k3,w,lambda);
+    //Calculo k4
+    for (i=0;i<N;i++){
+        thetacopia[i]=theta[i]+h*k3[i];
+    }
+    kuramoto(A,thetacopia,k4,w,lambda);
+    //Calculo de la nueva theta
+    for (i=0;i<N;i++){
+        theta[i]+=h/6*(k1[i]+2*k2[i]+2*k3[i]+k4[i]);
+    }
+
+}
+
+double calculoR(double *theta, int d){
+    double rreal=0.0;
+    double rim=0.0;
+    double r;
+    int i;
+    for (i=0;i<d;i++){
+        rreal+=cos(theta[i]);
+        rim+=sin(theta[i]);
+    }
+    rreal/=(double)d;
+    rim/=(double)d;
+    r=moduloImaginario(rreal,rim);
     return r;
 }
-
-void printear_file(char *lugar, double *variable_x, double *variable_y){
-    int i;
-    FILE *f;
-    f=fopen(lugar,"a");
-    for(i=0;i<N;i++){
-        fprintf(lugar, "%lf %lf \n",variable_x[i], variable_y[i]);
-    }
+//FUNCIONES FICHERO DE REPRESENTACION LAMBDA FRENTE A R
+void abrirFichero(FILE *f){
+    f=fopen("results.txt","w");
     fclose(f);
 }
-
-
-void genera_histograma(double *x, int x_data, double *histo, int n_histo, double *min, double *delta){
-    int i,indice;
-    double norma;
-    double  histo_min= x[0], histo_max=x[0];
-    for(i = 0;i<x_data;i++){
-        if(histo_min>x[i]){
-            histo_min = x[i];
-        }
-        if(histo_max<x[i]){
-            histo_max = x[i];
-        }
-    }
-    double longitud = (histo_max-histo_min)/n_histo;
-    norma = x_data*longitud;
-
-    for(i=0;i<n_histo;i++){
-        histo[i]=0;
-    }
-    for(i=0;i<x_data;i++){
-        indice = (x[i]-histo_min)/longitud;
-        if(indice == n_histo){
-            indice = n_histo-1;
-        }
-        histo[indice]++;
-    }
-    for(i=0;i<x_data;i++){
-        histo[i] = histo[i]/norma;
-    }
-    *min = histo_min;
-    *delta = longitud;
-
-
-
-
+void escribirFichero(FILE *f, double lambda, double r){
+    f=fopen("results.txt","a");
+    fprintf(f,"%lf\t%lf\n",lambda,r);
+    fclose(f);
 }
-void distribucion_grado_parte_0_2(int A[N][N],int k){
-    /*CON N 200 SE VE BIEN, PARA N GRANDES NO CORRE*/
-    matriz_A_ER(A, k);
-    FILE *f1;
-    f1 = fopen("conexiones_cada_nodo_ER.txt", "w");
-    double conexiones_vector[N];
-    double histo[10];
-    int conexiones_aux = 0;
-    for(int i=0;i<N;i++){
-        for(int j = 0;j<N;j++){
-            conexiones_aux+=A[i][j];
-            }
-        conexiones_vector[i] = ((double)conexiones_aux);
-        fprintf(f1, "%d\n", conexiones_aux);
-        conexiones_aux = 0;
-
-        }
-    fclose(f1);
-    double histo_min, delta_histo;
-    genera_histograma(conexiones_vector,N, histo, 10, &histo_min, &delta_histo);
+//FICHERO PARA LA W_EFF
+void abrirFichero_weff(FILE *f){
+    f=fopen("w_eff.txt","w");
+    fclose(f);
+}
+void escribirFichero_weff(FILE *f, double lambda, double *w_eff){
+    f=fopen("w_eff.txt","a");
+    fprintf(f,"%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\n",lambda,w_eff[0],w_eff[1],w_eff[2],w_eff[3],w_eff[4],w_eff[5],w_eff[6],w_eff[7],w_eff[8],w_eff[9]);
+    fclose(f);
+}
+//FUNCIONES FICHERO DE REPRESENTACION HISTOGRAMA P(k)
+void abrirHistograma (FILE*f){
+    f=fopen("pk.txt","w");
+    fclose(f);
+}
+void escribirHistograma(FILE*f, double H, int i){
+    f=fopen("pk.txt","a");
+    fprintf(f,"%d\t%lf\n",i,H);
+    fclose(f);
+}
+int main(){
     FILE *f;
-    f = fopen("histograma_ER.txt", "w");
+    FILE *g;
+    int conectividad=6;
+    double alpha=1.0;
+    double theta[N], w[N],thetacopia[N],w_eff[N],thetapunto[N]; //fase y frecuencia angular
+    double h;//paso de tiempo RK
+    int i,j,k,t,s;//para los arrays
+    double erre[Medidas]; //Array de r para poder hacer promedio
+    double r;//Calculo de la r en promedio
+    double lambdai,lambdaf,deltalambda,lambda;//para simular las graficas de r frente a lambda
+    double tfinal, tinicial;//Simulacion temporal
+    int pasoslambda,pasost; //pasos dados para lambda mas pasos de estacionamiento al variar lambda
+    /*
+    //Variables para el calculo de r
+    double rsum;
+    int medidasestacionarias;
+    */
+    //Variables para contruccion de histograma
+    int ki[N],m,M;
+    double d,H[N];
+    int** A = new int*[N];       // Crear un array de punteros (filas)
+    for (int i = 0; i < N; i++) {
+        A[i] = new int[N];       // Crear cada fila
+    }
+
+    //Calculo de la Matriz de adyacencia para la red
+    #ifdef Kuramoto
+    matrizAKuramoto(A);
+    #endif // Kuramoto
+    #ifdef redes
+    matrizaAredes(A,alpha,conectividad);
+    #endif // redes
+
+    h=0.01;
+    //estado inicial
+    for (i=0;i<N;i++){
+        for (j=0;j<N;j++){
+            cuentaVecinos(A,ki,i,j);
+        }
+    }
+
+    for (i=0; i<N;i++){
+        theta[i]=genNumRandom(-PI,PI);
+        //w[i]=k[i];
+        w[i]=genNumRandom(-0.5,0.5);
+    }
+
+
+    histograma(ki,H,N,L,&d,&m,&M);
+
+    abrirHistograma(f);
+    for (i=0;i<L;i++){
+        escribirHistograma(f,H[i],i+1);
+        printf("%d\t%lf\n",i+1,H[i]);
+    }
+
+    /*
+    //ALGORITMO PARA REPRESENTAR LAMBDA EN FUNCION DE R
+    //ABRIR FICHERO
+    abrirFichero(f);
+    abrirFichero_weff(g);
+    //PASOS DEL ARRAY
+    tinicial=0.0;
+    tfinal=10;
+    lambdai=0.0;
+    lambdaf=2.0;
+    deltalambda=0.02;
+    pasoslambda=(int)(lambdaf-lambdai)/deltalambda;
+    pasost=(int)(tfinal-tinicial)/h;
+    lambda=lambdai;
+    //Luego quito los dos printf, es para asegurarme que funcionan
+    printf("%lf\n",h);
+    printf("%d",pasost);
+    double w_promedio_k[10]; //la calculamos solo para 10 conectividades diferentes
+    int conectividades_weff[]={1,2,3,4,5,6,7,8,9,10};
     for(int i=0;i<10;i++){
-        fprintf(f, "%lf %lf\n",histo_min+delta_histo*i,histo[i]);
+        w_promedio_k[i]=0;
     }
-    fclose(f);
+    for (j=0;j<2;j++){
+        for (i=0;i<pasoslambda;i++){
+            r=0;
+            for(int nodo=0;nodo<N;nodo++){
+                w_eff[nodo]=0;
+            }
+            for (t=0;t<pasost;t++){
+                //Estabilizamos el sistema
+                RK4(h,w,lambda,theta,A);
+                //Calculo de w_eff
+                kuramoto(A, theta, thetapunto, w, lambda);//Para calcular w_eff necesitamos thetapunto
+                for(int nodo=0;nodo<N;nodo++){
+                    w_eff[nodo]+=h*thetapunto[nodo];
+                }
+            }
+            //calculo de r como promedio
+            for(t=0;t<100;t++){
+                RK4(h,w,lambda,theta,A);
+                r+=calculoR(theta,N);
+            }
+            r=r/100;//promediamos 100 r's en el equilibrio
+            escribirFichero(f,lambda,r);
 
-}
-
-int main()
-{
-    FILE *f;
-    f = fopen("resultados_r.txt", "w");
-    double w[N], theta[N], dtheta[N], fase_comienzo[N];
-    double r;
-    int A[N][N];
-    double t_final=100000, t_inicial=0, delta_t=1;//Por probar xd
-    double lambda_final=2, lambda_inicial=0.5 , delta_lambda=0.2;//Más o menos como en el artículo
-    int i, j;
-    int pasos_t = (t_final-t_inicial)/delta_t;
-    int pasos_lambda = (lambda_final-lambda_inicial)/delta_lambda;
-    matriz_A_ER(A,6);
-    frecuencias(w);
-    int t_thermal = 10000;
-    //¿QUÉ THETAS INICIALES COGEMOS?
-    fase_inicial(theta);
-    for(i = 0;i<pasos_lambda;i++){
-        for(j = 0;j<pasos_t; j++){
-            runge_kutta(A, theta, w, lambda_inicial+delta_lambda*i, t_inicial + delta_t*j);
-            if (j >= t_thermal) { //MEDIMOS A PARTIR DE AQUI, QUE SUPONGO QUE LLEGA A ESTADO ESTACIONARIO PERO NO ES ASÍ
-            r += modulo_r(theta);
+            //calculo w_eff para una lambda concreta
+            for(int nodo=0;nodo<N;nodo++){
+                w_eff[nodo]=w_eff[nodo]/tfinal;
             }
 
+            for(int k=0;k<10;k++){
+                int suma=0;
+                for(int nodo=0;nodo<N;nodo++){
+                    if(ki[nodo]==conectividades_weff[k]){
+                        suma++;
+                        w_promedio_k[k]+=w_eff[nodo];
+                    }
+                }
+                if(suma!=0){
+                    w_promedio_k[k]=w_promedio_k[k]/suma;
+                }
+            }
+            if(j==0){
+                escribirFichero_weff(g,lambda, w_promedio_k);
+            }
+
+
+            lambda+=deltalambda;
         }
-        r /= (t_final - t_thermal); //HACEMOS LA MEDIA DE LAS MEDIDAS DENTRO DEL IF
-        printf("%lf ", r);
-        fprintf(f, "%lf %lf \n",lambda_inicial+delta_lambda*i, r );
-        r = 0;
 
+
+        deltalambda=-deltalambda;
+        lambda+=deltalambda;
     }
-
-
+    */
+    for (i=0;i<N;i++){
+        delete[] A[i];
+    }
     return 0;
-
 }
