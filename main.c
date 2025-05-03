@@ -36,22 +36,26 @@ void histograma(int *data, double *H, int Ndata, int Nintervalos, double *d, int
     //calculo de la delta
     delta=(double)(maximo-minimo)/Nintervalos;
     *d=delta;
+    //Queremos leer los k conexiones posibles que van desde 0 hasta N-1
+    delta=1.0;
     //creacion de histograma
     for (i=0;i<Nintervalos;i++){
         H[i]=0;
     }
     for (i=0;i<Ndata;i++){
-        indice=(data[i]-minimo)/delta;
+        indice=(data[i])/delta;
         if (indice==Nintervalos){
             indice--;
         }
         H[indice]++;
     }
+
     //Normalizar Histograma
     norm=1.0/(delta*Ndata);
     for (i=0;i<Nintervalos;i++){
         H[i]*=norm;
     }
+
 }
 double promedio(double *x, int d){
     int i;
@@ -78,6 +82,13 @@ void matrizAKuramoto(int *A[N]){
 }
 #endif // Kuramoto
 #ifdef redes
+void cuentaVecinos(int *A[N], int *k, int i, int j){
+    if (A[i][j]==1){
+        k[i]++;
+        k[j]++;
+    }
+}
+/* Redes a mano, emplearemos las de Python
 double prob(int *k,double alpha, int d,int j){
     int i;
     double p,sum;
@@ -88,14 +99,7 @@ double prob(int *k,double alpha, int d,int j){
     p=(k[j]+alpha)/sum;
     return p;
 }
-void cuentaVecinos(int *A[N], int *k, int i, int j){
-    if (A[i][j]==1){
-        k[i]++;
-        k[j]++;
-    }
-}
-
-void matrizaAredes(int* A[N], double alpha, int conectividad){
+void matrizAredes(int* A[N], double alpha, int conectividad){
     int i,j,cuenta;
     int k[N];
     double p,num;
@@ -107,19 +111,23 @@ void matrizaAredes(int* A[N], double alpha, int conectividad){
     }
     if (alpha==1.0){
         p=(double) conectividad/(N-1.0);
-        for (i = 0; i < N; i++) {
-    for (j = i + 1; j < N; j++) {
-        num = genNumRandom(0,1);
-        if (num <= p) {
-            A[i][j] = 1;
-            A[j][i] = 1;
-        } else {
-            A[i][j] = 0;
-            A[j][i] = 0;
+        for (i=0;i<N;i++){
+            for (j=0;j<(i+1);j++){
+                if (j==i){
+                    A[i][j]=0;
+                }
+                else{
+                    num=genNumRandom(0,1);
+                    if (num<p){
+                        A[i][j]=1;
+                    }
+                    else{
+                        A[i][j]=0;
+                    }
+                }
+                A[j][i]=A[i][j];
+            }
         }
-    }
-    A[i][i] = 0; // Por si acaso
-}
     }
     else{
         for (i=0;i<N;i++){
@@ -156,6 +164,41 @@ void matrizaAredes(int* A[N], double alpha, int conectividad){
             printf("\n%d\n",i+1);
         }
     }
+}
+*/
+//Redes las generamos en Python, cada linea del fichero de texto es una arista
+void nombre(char *name, double alpha){
+    if (alpha==1.0){
+        strcpy(name,"red_ER.txt");
+    }
+    else{
+        strcpy(name,"red_BA.txt");
+    }
+}
+void matrizAredes(int *A[N], double alpha, int *k){
+    int i,j;
+    char name[L];
+    nombre(name,alpha);
+    FILE *f;
+    f=fopen(name,"r");
+    if (f==NULL){
+        printf("No se ha podido abrir el fichero\n");
+    }
+    //Inicializamos la red a 0
+    for (i=0; i<N;i++){
+        for (j=0;j<(i+1);j++){
+            A[i][j]=0;
+            A[j][i]=0;
+        }
+        k[i]=0;
+    }
+    while (fscanf(f,"%d %d",&i,&j)==2){
+        A[i][j]=1;
+        A[j][i]=1;
+        k[i]++;
+        k[j]++;
+    }
+    fclose(f);
 }
 #endif // redes
 void kuramoto (int *A[N], double *theta, double *dtheta, double *w, double lambda){ //devuelve dtheta y theta;
@@ -283,17 +326,18 @@ int main(){
     matrizAKuramoto(A);
     #endif // Kuramoto
     #ifdef redes
-    matrizaAredes(A,alpha,conectividad);
+    matrizAredes(A,alpha,ki);
     #endif // redes
 
     h=0.01;
+    /*
     //estado inicial
     for (i=0;i<N;i++){
         for (j=0;j<N;j++){
             cuentaVecinos(A,ki,i,j);
         }
     }
-
+    */
     for (i=0; i<N;i++){
         theta[i]=genNumRandom(-PI,PI);
         //w[i]=k[i];
