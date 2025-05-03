@@ -37,7 +37,7 @@ void histograma(int *data, double *H, int Ndata, int Nintervalos, double *d, int
     delta=(double)(maximo-minimo)/Nintervalos;
     *d=delta;
     //creacion de histograma
-    for (i=0;i<N;i++){
+    for (i=0;i<Nintervalos;i++){
         H[i]=0;
     }
     for (i=0;i<Ndata;i++){
