@@ -296,14 +296,14 @@ void escribirHistograma(FILE*f, double H, int i){
     fclose(f);
 }
 int main(){
+    int main(){
     FILE *f;
     FILE *g;
-    int conectividad=6;
-    double alpha=1.0;
+    double alpha=0.0;
     double theta[N], w[N],thetacopia[N],w_eff[N],thetapunto[N]; //fase y frecuencia angular
     double h;//paso de tiempo RK
-    int i,j,k,t,s;//para los arrays
-    double erre[Medidas]; //Array de r para poder hacer promedio
+    int i,j,k,t,s,sum;//para los arrays
+    //double erre[Medidas]; //Array de r para poder hacer promedio Descartable
     double r;//Calculo de la r en promedio
     double lambdai,lambdaf,deltalambda,lambda;//para simular las graficas de r frente a lambda
     double tfinal, tinicial;//Simulacion temporal
@@ -314,13 +314,20 @@ int main(){
     int medidasestacionarias;
     */
     //Variables para contruccion de histograma
-    int ki[N],m,M;
+    int m,M;
     double d,H[N];
+    //Matriz de adyacencia y array de vecinos
+    int ki[N];
     int** A = new int*[N];       // Crear un array de punteros (filas)
-    for (int i = 0; i < N; i++) {
+    for (i = 0; i < N; i++) {
         A[i] = new int[N];       // Crear cada fila
     }
 
+    for (j=0;j<N;j++){
+        theta[j]=genNumRandom(-PI,PI);
+        w[j]=(double)ki[j];
+        //w[j]=genNumRandom(-0.5,0.5);
+    }
     //Calculo de la Matriz de adyacencia para la red
     #ifdef Kuramoto
     matrizAKuramoto(A);
@@ -328,39 +335,26 @@ int main(){
     #ifdef redes
     matrizAredes(A,alpha,ki);
     #endif // redes
-
-    h=0.01;
+    //He quitado la parte del estado inicial aquí
     /*
-    //estado inicial
-    for (i=0;i<N;i++){
-        for (j=0;j<N;j++){
-            cuentaVecinos(A,ki,i,j);
-        }
-    }
-    */
-    for (i=0; i<N;i++){
-        theta[i]=genNumRandom(-PI,PI);
-        //w[i]=k[i];
-        w[i]=genNumRandom(-0.5,0.5);
-    }
-
-
+    Escribir P(k)
     histograma(ki,H,N,L,&d,&m,&M);
-
     abrirHistograma(f);
     for (i=0;i<L;i++){
         escribirHistograma(f,H[i],i+1);
         printf("%d\t%lf\n",i+1,H[i]);
     }
+    */
 
-    /*
+
     //ALGORITMO PARA REPRESENTAR LAMBDA EN FUNCION DE R
     //ABRIR FICHERO
     abrirFichero(f);
     abrirFichero_weff(g);
     //PASOS DEL ARRAY
     tinicial=0.0;
-    tfinal=10;
+    tfinal=100;
+    h=0.01;
     lambdai=0.0;
     lambdaf=2.0;
     deltalambda=0.02;
@@ -375,6 +369,30 @@ int main(){
     for(int i=0;i<10;i++){
         w_promedio_k[i]=0;
     }
+    r=0;
+    sum=0;
+    for (s=0;s<2;s++){
+        for (i=0;i<pasoslambda;i++){
+            //Generamos un estado inicial para cada paso lambda
+            for (t=0;t<pasost;t++){
+                RK4(h,w,lambda,theta,A);
+                if (t>=((int)pasost/3.0)){ //Pasado un tercio de nuestro tiempo de recorrido, el sistema se habrá establecido y empezamos a medir
+                    r+=calculoR(theta,N);
+                    sum++;
+                }
+            }
+            r=r/sum;
+            escribirFichero(f,lambda,r);
+            r=0;
+            sum=0;
+            lambda+=deltalambda;
+        }
+        deltalambda=-deltalambda;
+        lambda+=deltalambda;
+    }
+
+
+    /*
     for (j=0;j<2;j++){
         for (i=0;i<pasoslambda;i++){
             r=0;
@@ -432,4 +450,5 @@ int main(){
         delete[] A[i];
     }
     return 0;
+}
 }
