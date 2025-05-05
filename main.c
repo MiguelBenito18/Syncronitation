@@ -295,6 +295,88 @@ void escribirHistograma(FILE*f, double H, int i){
     fprintf(f,"%d\t%lf\n",i,H);
     fclose(f);
 }
+void kuramoto_star(double *theta, double *dtheta, double *w, double lambda){ //devuelve dtheta y theta;
+    int i, j;
+    double omega = (10+10)/(11.0);
+    double suma_h=0;
+    for(i = 1;i<11;i++){
+        suma_h+=sin(theta[i]-theta[0]);
+        dtheta[i] = w[i]- omega + lambda*sin(theta[i]-theta[0]);
+    }
+    dtheta[0] = w[0]-omega+lambda*suma_h;
+
+}
+void RK4_star (double h,double *w, double lambda, double *theta){
+    int i;
+    double k1[11], k2[11], k3[11], k4[11];
+    double thetacopia[11];
+    //Calculo k1
+    kuramoto_star(theta,k1,w,lambda);
+    //Calculo k2
+    for (i=0;i<11;i++){
+        thetacopia[i]=theta[i]+h/2.0*k1[i];
+    }
+    kuramoto_star(thetacopia,k2,w,lambda);
+    //Calculo k3
+    for (i=0;i<11;i++){
+        thetacopia[i]=theta[i]+h/2.0*k2[i];
+    }
+    kuramoto_star(thetacopia,k3,w,lambda);
+    //Calculo k4
+    for (i=0;i<11;i++){
+        thetacopia[i]=theta[i]+h*k3[i];
+    }
+    kuramoto_star(thetacopia,k4,w,lambda);
+    //Calculo de la nueva theta
+    for (i=0;i<11;i++){
+        theta[i]+=h/6*(k1[i]+2*k2[i]+2*k3[i]+k4[i]);
+    }
+
+}
+
+void red_estrella(){
+    int i, j;
+    FILE *f;
+    f = fopen("estrella.txt", "wt");
+    double theta[11];
+    double  w[11];
+    int medidas, deltalambda, deltat, lambdapasos, tpasos;
+    double lambda, lambdai, lambdaf, ti, tf, h;
+    //inicializamos wi y thetas;
+    for(i = 0;i<11;i++){
+        theta[i] = genNumRandom(-PI, PI);
+        w[i] = 1;
+    }
+    w[0] = 10;
+    int sentido = 0;
+    lambdai = 0, lambdaf = 2.6, ti = 0, tf = 10, deltalambda = 0.1, h = 0.01;
+    lambdapasos = (int)((lambdaf-lambdai)/deltalambda);
+    tpasos = (int)((tf-ti)/h);
+    double r[2*lambdapasos], r_aux = 0;
+    lambda = lambdai;
+    for(sentido = 0;sentido<2;sentido++){
+        for(i = 0;i<lambdapasos;i++){
+            for(j = 0;j<tpasos;j++){
+                RK4_star(h,w, lambda, theta);
+                if(j>=tpasos/3){
+                    r_aux += calculoR(theta, 11);
+                }
+            }
+            r[sentido*lambdapasos+ i] = r_aux/(tpasos-tpasos/3);
+            printf("%lf %lf \n", lambda, r[sentido*lambdapasos+ i]);
+            fprintf(f, "%lf %lf \n", 0.0, 0.0);
+            r_aux = 0;
+            lambda+=deltalambda;
+        }
+        lambda = lambdaf;
+        deltalambda = -deltalambda;
+
+    }
+    fclose(f);
+
+
+
+}
 int main(){
     int main(){
     FILE *f;
