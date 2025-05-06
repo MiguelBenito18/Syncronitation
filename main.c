@@ -378,7 +378,6 @@ void red_estrella(){
 
 }
 int main(){
-    int main(){
     FILE *f;
     FILE *g;
     double alpha=0.0;
@@ -404,12 +403,6 @@ int main(){
     for (i = 0; i < N; i++) {
         A[i] = new int[N];       // Crear cada fila
     }
-
-    for (j=0;j<N;j++){
-        theta[j]=genNumRandom(-PI,PI);
-        w[j]=(double)ki[j];
-        //w[j]=genNumRandom(-0.5,0.5);
-    }
     //Calculo de la Matriz de adyacencia para la red
     #ifdef Kuramoto
     matrizAKuramoto(A);
@@ -427,7 +420,11 @@ int main(){
         printf("%d\t%lf\n",i+1,H[i]);
     }
     */
-
+    for (j=0;j<N;j++){
+        theta[j]=genNumRandom(-PI,PI);
+        w[j]=ki[j];
+        //w[j]=genNumRandom(-0.5,0.5);
+    }
 
     //ALGORITMO PARA REPRESENTAR LAMBDA EN FUNCION DE R
     //ABRIR FICHERO
@@ -453,22 +450,57 @@ int main(){
     }
     r=0;
     sum=0;
-    for (s=0;s<2;s++){
+    for (j=0;j<2;j++){
         for (i=0;i<pasoslambda;i++){
-            //Generamos un estado inicial para cada paso lambda
+            r=0;
+            for(int nodo=0;nodo<N;nodo++){
+                w_eff[nodo]=0;
+            }
             for (t=0;t<pasost;t++){
                 RK4(h,w,lambda,theta,A);
-                if (t>=((int)pasost/3.0)){ //Pasado un tercio de nuestro tiempo de recorrido, el sistema se habrá establecido y empezamos a medir
-                    r+=calculoR(theta,N);
-                    sum++;
+                //Calculo de w_eff
+                if(t>(pasost/2)){//empezamos a integrar cuando el sistema ya est� evolucionado
+                    kuramoto(A, theta, thetapunto, w, lambda);//Para calcular w_eff necesitamos thetapunto
+                    for(int nodo=0;nodo<N;nodo++){
+                        w_eff[nodo]+=h*thetapunto[nodo];
+                    }
                 }
             }
-            r=r/sum;
+            //calculo de r como promedio
+            for(t=0;t<100;t++){
+                RK4(h,w,lambda,theta,A);
+                r+=calculoR(theta,N);
+            }
+            r=r/100;//promediamos 100 r's en el equilibrio
             escribirFichero(f,lambda,r);
-            r=0;
-            sum=0;
+
+            //calculo w_eff para una lambda concreta
+            for(int nodo=0;nodo<N;nodo++){
+                w_eff[nodo]=2*w_eff[nodo]/tfinal;//weff/T donde T=tfinal/2
+            }
+
+            for(int k=0;k<9;k++){
+                w_promedio_k[k]=0;
+                int suma=0;
+                for(int nodo=0;nodo<N;nodo++){
+                    if(ki[nodo]==conectividades_weff[k]){
+                        suma++;
+                        w_promedio_k[k]+=w_eff[nodo];
+                    }
+                }
+                if(suma!=0){
+                    w_promedio_k[k]=w_promedio_k[k]/suma;
+                }
+            }
+            if(j==0){
+                escribirFichero_weff(g,lambda, w_promedio_k);
+            }
+
+
             lambda+=deltalambda;
         }
+
+
         deltalambda=-deltalambda;
         lambda+=deltalambda;
     }
@@ -532,5 +564,4 @@ int main(){
         delete[] A[i];
     }
     return 0;
-}
 }
