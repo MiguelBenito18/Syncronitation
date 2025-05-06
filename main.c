@@ -377,6 +377,17 @@ void red_estrella(){
 
 
 }
+//Nuevas ideas
+int mayorConectividad(int *k){
+    int i,m;
+    m=0;
+    for (i=1;i<N;i++){
+        if (k[i]>=k[m]){
+            m=i;
+        }
+    }
+    return m;
+}
 int main(){
     FILE *f;
     FILE *g;
