@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <math.h>
+#include <string.h>
 
 #define N 10000 //Numero de nodos de la red
 #define L 9999 //Numero de intervalos del histograma
