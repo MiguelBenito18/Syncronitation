@@ -89,84 +89,6 @@ void cuentaVecinos(int *A[N], int *k, int i, int j){
         k[j]++;
     }
 }
-/* Redes a mano, emplearemos las de Python
-double prob(int *k,double alpha, int d,int j){
-    int i;
-    double p,sum;
-    sum=0.0;
-    for (i=0;i<(d-1);i++){
-        sum+=k[i]+alpha;
-    }
-    p=(k[j]+alpha)/sum;
-    return p;
-}
-void matrizAredes(int* A[N], double alpha, int conectividad){
-    int i,j,cuenta;
-    int k[N];
-    double p,num;
-    for (i=0;i<N;i++){
-        for (j=0;j<N;j++){
-            A[i][j]=0;
-        }
-        k[i]=0;
-    }
-    if (alpha==1.0){
-        p=(double) conectividad/(N-1.0);
-        for (i=0;i<N;i++){
-            for (j=0;j<(i+1);j++){
-                if (j==i){
-                    A[i][j]=0;
-                }
-                else{
-                    num=genNumRandom(0,1);
-                    if (num<p){
-                        A[i][j]=1;
-                    }
-                    else{
-                        A[i][j]=0;
-                    }
-                }
-                A[j][i]=A[i][j];
-            }
-        }
-    }
-    else{
-        for (i=0;i<N;i++){
-            cuenta=0;
-            for (j=0;j<(i+1);j++){
-                if (j==i){
-                    A[i][j]=0;
-                }
-                else{
-                    if (i<5){
-                        A[i][j]=1;
-                    }
-                    else{
-                        if (cuenta<conectividad/2){
-                            p=prob(k,alpha,i+1,j);
-                            num=genNumRandom(0.0,1.0);
-                            if (num<=p){
-                                A[i][j]=1;
-                                cuenta++;
-                            }
-                            else{
-                                A[i][j]=0;
-                            }
-                        }
-                        else{
-                            A[i][j]=0;
-                        }
-                    }
-                }
-                A[j][i]=A[i][j];
-                cuentaVecinos(A,k,i,j);
-                printf("%d",A[i][j]);
-            }
-            printf("\n%d\n",i+1);
-        }
-    }
-}
-*/
 //Redes las generamos en Python, cada linea del fichero de texto es una arista
 void nombre(char *name, double alpha){
     if (alpha==1.0){
@@ -423,7 +345,7 @@ int main(){
     matrizAredes(A,alpha,ki);
     #endif // redes
     //He quitado la parte del estado inicial aquí
-    /*
+    
     Escribir P(k)
     histograma(ki,H,N,L,&d,&m,&M);
     abrirHistograma(f);
@@ -431,7 +353,7 @@ int main(){
         escribirHistograma(f,H[i],i+1);
         printf("%d\t%lf\n",i+1,H[i]);
     }
-    */
+    
     for (j=0;j<N;j++){
         theta[j]=genNumRandom(-PI,PI);
         w[j]=ki[j];
@@ -517,61 +439,6 @@ int main(){
         lambda+=deltalambda;
     }
 
-
-    /*
-    for (j=0;j<2;j++){
-        for (i=0;i<pasoslambda;i++){
-            r=0;
-            for(int nodo=0;nodo<N;nodo++){
-                w_eff[nodo]=0;
-            }
-            for (t=0;t<pasost;t++){
-                //Estabilizamos el sistema
-                RK4(h,w,lambda,theta,A);
-                //Calculo de w_eff
-                kuramoto(A, theta, thetapunto, w, lambda);//Para calcular w_eff necesitamos thetapunto
-                for(int nodo=0;nodo<N;nodo++){
-                    w_eff[nodo]+=h*thetapunto[nodo];
-                }
-            }
-            //calculo de r como promedio
-            for(t=0;t<100;t++){
-                RK4(h,w,lambda,theta,A);
-                r+=calculoR(theta,N);
-            }
-            r=r/100;//promediamos 100 r's en el equilibrio
-            escribirFichero(f,lambda,r);
-
-            //calculo w_eff para una lambda concreta
-            for(int nodo=0;nodo<N;nodo++){
-                w_eff[nodo]=w_eff[nodo]/tfinal;
-            }
-
-            for(int k=0;k<10;k++){
-                int suma=0;
-                for(int nodo=0;nodo<N;nodo++){
-                    if(ki[nodo]==conectividades_weff[k]){
-                        suma++;
-                        w_promedio_k[k]+=w_eff[nodo];
-                    }
-                }
-                if(suma!=0){
-                    w_promedio_k[k]=w_promedio_k[k]/suma;
-                }
-            }
-            if(j==0){
-                escribirFichero_weff(g,lambda, w_promedio_k);
-            }
-
-
-            lambda+=deltalambda;
-        }
-
-
-        deltalambda=-deltalambda;
-        lambda+=deltalambda;
-    }
-    */
     for (i=0;i<N;i++){
         delete[] A[i];
     }
